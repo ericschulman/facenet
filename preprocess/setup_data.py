@@ -8,19 +8,19 @@ def parse_arguments(argv):
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--schema_dir', type=str, 
 		help='Directory with schema.', 
-		default='../../datasets/UT research project datasets/Style Sku Family.csv')
+		default='../datasets/UT research project datasets/Style Sku Family.csv')
 	parser.add_argument('--data_dir', type=str, 
 		help='Directory with data.', 
-		default='../../datasets/npg_small/')
+		default='../datasets/npg_small/')
 	parser.add_argument('--percent', type=float, 
 		help='percentage of data to train with.', 
 		default=.8)
 	parser.add_argument('--test_dir', type=str, 
 		help='Directory with data.', 
-		default='../../datasets/fonts_test/')
+		default='../datasets/small_test/')
 	parser.add_argument('--train_dir', type=str, 
 		help='Directory with data.', 
-		default='../../datasets/fonts_train/')
+		default='../datasets/small_train/')
 	return parser.parse_args(argv)
 
 

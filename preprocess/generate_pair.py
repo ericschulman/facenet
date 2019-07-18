@@ -88,8 +88,8 @@ class GeneratePairs:
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, help='Directory with aligned images.', default='../datasets/fonts_test/')
-    parser.add_argument('--saved_dir', type=str, help='Directory to save pairs.', default='../datasets/fonts_test/')
+    parser.add_argument('--data_dir', type=str, help='Directory with aligned images.', default='../datasets/small_test/')
+    parser.add_argument('--saved_dir', type=str, help='Directory to save pairs.', default='../datasets/small_test/')
     parser.add_argument('--repeat_times', type=str, help='Repeat times to generate pairs', default=1)
     return parser.parse_args(argv)
 
