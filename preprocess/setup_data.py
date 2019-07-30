@@ -8,7 +8,7 @@ def parse_arguments(argv):
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--schema_dir', type=str, 
 		help='Directory with schema.', 
-		default='../datasets/UT research project datasets/Style Sku Family.csv')
+		default='../../datasets/UT research project datasets/Style Sku Family.csv')
 	parser.add_argument('--data_dir', type=str, 
 		help='Directory with data.', 
 		default='../datasets/npg_small/')
@@ -22,6 +22,31 @@ def parse_arguments(argv):
 		help='Directory with data.', 
 		default='../datasets/small_train/')
 	return parser.parse_args(argv)
+
+
+def preprocess(img):
+	"""cut down on the size of the images by making smaller 100x100 chunks of 
+	the panagram"""
+	raw_pix = np.array(img)
+	preprocess_im = []
+	#divide the panagram into lines
+	for pg_line in [0,1]:
+
+		#divide the image into 2 halves
+		pix = raw_pix[pg_line*200:200+pg_line*200, :]
+
+		#find the corners
+		topcol = np.argmax((np.argmax(pix!=255,axis=0) > 0))
+		botcol = np.argmax((np.argmax(np.flip(pix,axis=(0,1))!=255,axis=0) > 0))
+		toprow = np.argmax((np.argmax(pix!=255,axis=1) > 0))
+		botrow = np.argmax((np.argmax(np.flip(pix,axis=(0,1))!=255,axis=1) > 0))
+
+		pix= pix[toprow:200-botrow,topcol:400-botcol]
+		crop_img = Image.fromarray(pix)
+		preprocess_im.append(crop_img)
+
+	return preprocess_im
+
 
 
 def main(args):
@@ -53,15 +78,13 @@ def main(args):
 			if not os.path.exists(fam_path):
 				os.mkdir(fam_path)
 
-			try:
-				#create new file
-				number = ("%04d"%style)[:4]
-				new_fpath = os.path.join(fam_path, 'fam' + str(family) + '_' + number +'.png')
-				img = Image.open(file)
-				img.save(new_fpath, 'png')
-				#print(fname+" to "+new_fpath)
-			except:
-				print('error: ' + fname)
+			img = Image.open(file)
+			number = ("%03d"%style)[:3]
+
+			processed_imgs = preprocess(img)
+			for p_ind in range(len(processed_imgs)):
+				new_fpath = os.path.join(fam_path, 'fam' + str(family) + '_' + number + str(p_ind) +'.png')
+				processed_imgs[p_ind].save(new_fpath, 'png')
 
 
 if __name__ == '__main__':
