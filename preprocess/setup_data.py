@@ -8,7 +8,7 @@ def parse_arguments(argv):
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--schema_dir', type=str, 
 		help='Directory with schema.', 
-		default='../../datasets/UT research project datasets/Style Sku Family.csv')
+		default='../datasets/UT research project datasets/Style Sku Family.csv')
 	parser.add_argument('--data_dir', type=str, 
 		help='Directory with data.', 
 		default='../datasets/npg_small/')
@@ -25,6 +25,29 @@ def parse_arguments(argv):
 
 
 def preprocess(img):
+	lines = crop_sentences(img)
+	words = []
+	for line in lines:
+		print('yo')
+		raw_pix = np.array(line)
+		start_index = 0
+		while start_index < raw_pix.shape[1] :
+			jump  = np.argmax( raw_pix[:,start_index:].min(axis=0) )
+			print('start', start_index, jump, raw_pix.shape[1])
+			if  jump > 0:
+				print('update1', start_index, start_index + jump, raw_pix.shape[1])
+				pix = raw_pix[:,start_index:start_index + jump]
+				crop_img = Image.fromarray(pix)
+				words.append(crop_img)
+				start_index = jump + start_index
+			else:
+				start_index = start_index +1
+				print('update2', start_index, start_index + jump, raw_pix.shape[1])
+		#while we are before the end of the line
+	return words
+
+
+def crop_sentences(img):
 	"""cut down on the size of the images by making smaller 100x100 chunks of 
 	the panagram"""
 	raw_pix = np.array(img)
@@ -60,9 +83,7 @@ def main(args):
 		os.mkdir(args.test_dir)
 	
 	#set up some variables
-	save_ext = '.png'
 	img_files = glob.glob(args.data_dir + '*.bmp')
-
 	for file in img_files:
 		#process image name
 		fpath, fname = os.path.split(file)
