@@ -33,8 +33,8 @@ def preprocess(img):
 		raw_pix = np.array(line)
 		start_index = 0
 		while start_index < raw_pix.shape[1] :
-			jump  = np.argmax( raw_pix[:,start_index:].min(axis=0) )
-			if  jump > 0:
+			jump  = np.argmax( (raw_pix[:,start_index:] ).min(axis=0) )
+			if  jump > 1: #the necessary size of a jump before a new character
 				pix = raw_pix[:,start_index:start_index + jump]
 				crop_img = Image.fromarray(pix)
 				words.append(crop_img)
@@ -75,8 +75,12 @@ def crop(img,size):
 	
 	bottom = np.min((size,raw_pix.shape[0]))
 	right = np.min((size,raw_pix.shape[1]))
+	
+	#center
+	top = int((size - bottom)/2)
+	left =  int((size - right)/2)
 
-	crop_img[:bottom,:right] = raw_pix[:bottom,:right]
+	crop_img[top:top+bottom,left:left+right] = raw_pix[:bottom,:right]
 	final_img = Image.fromarray(crop_img)
 	return final_img
 
