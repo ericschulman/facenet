@@ -120,14 +120,14 @@ def main(args):
 
 			processed_imgs = preprocess(img)
 			for p_ind in range(len(processed_imgs)):
-				img_name = 'fam' + str(family) + '_' + number + str(p_ind)
+				img_name = 'fam' + str(family) + '_' + (number + str(p_ind))[:4]
 
 				#update sizes.txt
-				sizes = open(fam_path+'/sizes.txt','a')
+				#sizes = open(fam_path+'/sizes.txt','a')
 
-				sizes.write(img_name + ',' + str(processed_imgs[p_ind].size[0]) 
-					+ ',' + str(processed_imgs[p_ind].size[1]) + '\n')
-				sizes.close()
+				#sizes.write(img_name + ',' + str(processed_imgs[p_ind].size[0]) 
+				#	+ ',' + str(processed_imgs[p_ind].size[1]) + '\n')
+				#sizes.close()
 
 				#resize/crop and save
 				final_img = crop(processed_imgs[p_ind],100)
