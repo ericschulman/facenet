@@ -117,23 +117,27 @@ def main(args):
 
 			img = Image.open(file)
 			number = ("%03d"%style)[:3]
+			
+			try: 
+				processed_imgs = preprocess(img)
+				for p_ind in range(len(processed_imgs)):
+					img_name = 'fam' + str(family) + '_' + (number + str(p_ind))[:4]
 
-			processed_imgs = preprocess(img)
-			for p_ind in range(len(processed_imgs)):
-				img_name = 'fam' + str(family) + '_' + (number + str(p_ind))[:4]
+					#update sizes.txt
+					#sizes = open(fam_path+'/sizes.txt','a')
 
-				#update sizes.txt
-				#sizes = open(fam_path+'/sizes.txt','a')
+					#sizes.write(img_name + ',' + str(processed_imgs[p_ind].size[0]) 
+					#	+ ',' + str(processed_imgs[p_ind].size[1]) + '\n')
+					#sizes.close()
 
-				#sizes.write(img_name + ',' + str(processed_imgs[p_ind].size[0]) 
-				#	+ ',' + str(processed_imgs[p_ind].size[1]) + '\n')
-				#sizes.close()
+					#resize/crop and save
+					final_img = crop(processed_imgs[p_ind],100)
+					if final_img.mode != 'RGB':
+						final_img = final_img.convert('RGB')
+					final_img.save(fam_path + '/' + img_name + '.png','png')
 
-				#resize/crop and save
-				final_img = crop(processed_imgs[p_ind],100)
-				if final_img.mode != 'RGB':
-					final_img = final_img.convert('RGB')
-				final_img.save(fam_path + '/' + img_name + '.png','png')
+			except:
+				print('fam' + str(family) + '_' + (number + str(p_ind))[:4])
 
 
 if __name__ == '__main__':
