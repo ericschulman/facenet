@@ -41,6 +41,7 @@ from tensorflow.python.platform import gfile
 import math
 from six import iteritems
 
+
 def triplet_loss(anchor, positive, negative, alpha):
     """Calculate the triplet loss according to the FaceNet paper
     
@@ -381,6 +382,7 @@ def load_model(model, input_map=None):
         saver = tf.train.import_meta_graph(os.path.join(model_exp, meta_file), input_map=input_map)
         saver.restore(tf.get_default_session(), os.path.join(model_exp, ckpt_file))
     
+
 def get_model_filenames(model_dir):
     files = os.listdir(model_dir)
     meta_files = [s for s in files if s.endswith('.meta')]
@@ -405,6 +407,7 @@ def get_model_filenames(model_dir):
                 ckpt_file = step_str.groups()[0]
     return meta_file, ckpt_file
   
+
 def distance(embeddings1, embeddings2, distance_metric=0):
     if distance_metric==0:
         # Euclidian distance
@@ -421,7 +424,7 @@ def distance(embeddings1, embeddings2, distance_metric=0):
         
     return dist
 
-def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_folds=10, distance_metric=0, subtract_mean=False):
+def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_folds=10, distance_metric=0, subtract_mean=False,  labels = None):
     assert(embeddings1.shape[0] == embeddings2.shape[0])
     assert(embeddings1.shape[1] == embeddings2.shape[1])
     nrof_pairs = min(len(actual_issame), embeddings1.shape[0])
@@ -448,19 +451,43 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
         best_threshold_index = np.argmax(acc_train)
         for threshold_idx, threshold in enumerate(thresholds):
             tprs[fold_idx,threshold_idx], fprs[fold_idx,threshold_idx], _ = calculate_accuracy(threshold, dist[test_set], actual_issame[test_set])
-        _, _, accuracy[fold_idx] = calculate_accuracy(thresholds[best_threshold_index], dist[test_set], actual_issame[test_set])
-          
+
+        #TODO: provide images into accuracy caculation
+        _, _, accuracy[fold_idx] = calculate_accuracy(thresholds[best_threshold_index], dist[test_set], actual_issame[test_set],labels=labels, test_set = test_set)
+        
         tpr = np.mean(tprs,0)
         fpr = np.mean(fprs,0)
     return tpr, fpr, accuracy
 
-def calculate_accuracy(threshold, dist, actual_issame):
+
+def save_examples(labels,test_set,predict_issame,actual_issame):
+    """save examples of true and false positives to help 
+    visualize the learning"""
+
+    labels1 = np.array(labels)[0::2][test_set]
+    labels2 = np.array(labels)[1::2][test_set]
+    
+    #figure out which are negatives and positives
+    fp = np.logical_and(predict_issame, np.logical_not(actual_issame))
+    fp_files1 = labels1[fp]
+    fp_files2 = labels2[fp]
+
+    for i in range(fp_files1.shape[0]):
+        print(i,fp_files1[i],fp_files2[i])
+
+
+def calculate_accuracy(threshold, dist, actual_issame, labels=None, test_set=None):
     predict_issame = np.less(dist, threshold)
+
     tp = np.sum(np.logical_and(predict_issame, actual_issame))
     fp = np.sum(np.logical_and(predict_issame, np.logical_not(actual_issame)))
     tn = np.sum(np.logical_and(np.logical_not(predict_issame), np.logical_not(actual_issame)))
     fn = np.sum(np.logical_and(np.logical_not(predict_issame), actual_issame))
-  
+    
+    #save examples
+    if labels is not None and test_set is not None:
+        save_examples(labels,test_set,predict_issame,actual_issame)
+
     tpr = 0 if (tp+fn==0) else float(tp) / float(tp+fn)
     fpr = 0 if (fp+tn==0) else float(fp) / float(fp+tn)
     acc = float(tp+tn)/dist.size
