@@ -460,40 +460,50 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
     return tpr, fpr, accuracy
 
 
-def save_examples(labels,test_set,predict_issame,actual_issame):
+def save_examples(labels,test_set,predict_issame,actual_issame, logdir = '../logs/20190814-112400'):
     """save examples of true and false positives to help 
     visualize the learning"""
-
     labels1 = np.array(labels)[0::2][test_set]
     labels2 = np.array(labels)[1::2][test_set]
-    
+  
     #figure out which are negatives and positives
     fp = np.logical_and(predict_issame, np.logical_not(actual_issame))
-    fp_files1 = labels1[fp]
-    fp_files2 = labels2[fp]
-
-    #false negatives
     fn = np.logical_and(np.logical_not(predict_issame), actual_issame)
-    fn_files1 = labels1[fn]
-    fn_files2 = labels2[fn]
+    error_indexes = {'False Negatives':fn, 'False Positives':fp}
 
-    #trying to save images ... 
-    
+    #trying to save images to a small tf network
+    input_map = {}
 
-    #read the contents of all of the files
-    for filename in fn_files1:
-        image_paths_placeholder = tf.placeholder(tf.string, shape=(None,1), name='image_paths')
-        file_contents = tf.read_file(filename)
-        image = tf.image.decode_image(file_contents, channels=3)
-        tf.summary.image("Example", image, max_outputs=100)
+    #save the false negatives first, the false positives
+    for error_type in ['False Negatives', 'False Positives']:
+        wrong_pairs = np.zeros((1,0,200,3)) #create a null image to concat to
+        indexes = error_indexes[error_type]
+        files1 = labels1[indexes]
+        files2 = labels2[indexes]
+        #for each pair...
+        for i in range(len(files1)):
+            wrong_row = np.zeros((1,100,0,3))
+            #cycle through both types of files
+            for j in range(2) :
+                filelist = [files1,files2][j]
+                image_paths_placeholder = tf.placeholder(tf.string, name='image_paths'+str(i) +str(j))
+                input_map[image_paths_placeholder] = filelist[i]
+                #read the contents of the file and write it
+                file_contents = tf.read_file(image_paths_placeholder)
+                img = tf.image.decode_image(file_contents)
+                img = tf.reshape(img, (1,100,100,3)) #TODO: hard coded dimensions
+                wrong_row = tf.concat((wrong_row,img),axis=2)
+            wrong_pairs = tf.concat((wrong_pairs,wrong_row),axis=1)
+        
+        #concat row to total
+        tf.summary.image(error_type, wrong_pairs, max_outputs=100)
 
+    #run a small network just to save the output    
     summary_op = tf.summary.merge_all()
-
     with tf.Session() as sess:
-        summary = sess.run(summary_op, feed_dict={image_paths_placeholder: fn_files1})
-        writer = tf.summary.FileWriter('dummy')
+        summary = sess.run(summary_op, feed_dict=input_map)
+        writer = tf.summary.FileWriter(logdir)
         writer.add_summary(summary, 0)
-
 
 
 def calculate_accuracy(threshold, dist, actual_issame, labels=None, test_set=None):
