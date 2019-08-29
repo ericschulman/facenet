@@ -472,8 +472,28 @@ def save_examples(labels,test_set,predict_issame,actual_issame):
     fp_files1 = labels1[fp]
     fp_files2 = labels2[fp]
 
-    for i in range(fp_files1.shape[0]):
-        print(i,fp_files1[i],fp_files2[i])
+    #false negatives
+    fn = np.logical_and(np.logical_not(predict_issame), actual_issame)
+    fn_files1 = labels1[fn]
+    fn_files2 = labels2[fn]
+
+    #trying to save images ... 
+    
+
+    #read the contents of all of the files
+    for filename in fn_files1:
+        image_paths_placeholder = tf.placeholder(tf.string, shape=(None,1), name='image_paths')
+        file_contents = tf.read_file(filename)
+        image = tf.image.decode_image(file_contents, channels=3)
+        tf.summary.image("Example", image, max_outputs=100)
+
+    summary_op = tf.summary.merge_all()
+
+    with tf.Session() as sess:
+        summary = sess.run(summary_op, feed_dict={image_paths_placeholder: fn_files1})
+        writer = tf.summary.FileWriter('dummy')
+        writer.add_summary(summary, 0)
+
 
 
 def calculate_accuracy(threshold, dist, actual_issame, labels=None, test_set=None):
