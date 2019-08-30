@@ -80,11 +80,15 @@ def main(args):
             #for the first round save the input map, so that we can visualize images of positives
             evaluate(sess, eval_enqueue_op, image_paths_placeholder, labels_placeholder, phase_train_placeholder, batch_size_placeholder, control_placeholder,
                 embeddings, label_batch, paths, actual_issame, args.lfw_batch_size, args.lfw_nrof_folds, args.distance_metric, args.subtract_mean,
-                args.use_flipped_images, args.use_fixed_image_standardization, logs = args.logs)
+                args.use_flipped_images, args.use_fixed_image_standardization, logdir = args.logs)
+
+    #save the examples to an event file
+    save_examples( args.logs)
+
 
               
 def evaluate(sess, enqueue_op, image_paths_placeholder, labels_placeholder, phase_train_placeholder, batch_size_placeholder, control_placeholder,
-        embeddings, labels, image_paths, actual_issame, batch_size, nrof_folds, distance_metric, subtract_mean, use_flipped_images, use_fixed_image_standardization, logs=None):
+        embeddings, labels, image_paths, actual_issame, batch_size, nrof_folds, distance_metric, subtract_mean, use_flipped_images, use_fixed_image_standardization, logdir=None):
     # Run forward pass to calculate embeddings
     print('Runnning forward pass on LFW images')
     
@@ -126,7 +130,8 @@ def evaluate(sess, enqueue_op, image_paths_placeholder, labels_placeholder, phas
 
     assert np.array_equal(lab_array, np.arange(nrof_images))==True, 'Wrong labels used for evaluation, possibly caused by training examples left in the input pipeline'
 
-    tpr, fpr, accuracy, val, val_std, far = lfw.evaluate(embeddings, actual_issame, nrof_folds=nrof_folds, distance_metric=distance_metric, subtract_mean=subtract_mean, labels=image_paths)
+    tpr, fpr, accuracy, val, val_std, far = lfw.evaluate(embeddings, actual_issame, nrof_folds=nrof_folds, distance_metric=distance_metric, subtract_mean=subtract_mean, labels=image_paths, 
+        logdir= logdir)
     
     print('Accuracy: %2.5f+-%2.5f' % (np.mean(accuracy), np.std(accuracy)))
     print('Validation rate: %2.5f+-%2.5f @ FAR=%2.5f' % (val, val_std, far))
@@ -136,6 +141,45 @@ def evaluate(sess, enqueue_op, image_paths_placeholder, labels_placeholder, phas
     eer = brentq(lambda x: 1. - x - interpolate.interp1d(fpr, tpr)(x), 0., 1.)
     print('Equal Error Rate (EER): %1.3f' % eer)
    
+
+def save_examples(logdir = '../logs/test'):
+    """save examples of true and false positives to help 
+    visualize the learning"""
+    input_map = {}
+
+    for error_type in ['false_negatives', 'false_positives']:
+        #load the names of the files
+        files = np.loadtxt(logdir + '/' + error_type + '.csv', dtype=str, delimiter = ',')
+        files1 = files[:,0]
+        files2 = files[:,1]
+
+        wrong_pairs = np.zeros((1,0,200,3)) #create a null image to concat to
+
+        #for each pair...
+        for i in range(len(files1)):
+            wrong_row = np.zeros((1,100,0,3))
+            #cycle through both types of files
+            for j in range(2) :
+                filelist = [files1,files2][j]
+                image_paths_placeholder = tf.placeholder(tf.string, name='image_paths'+str(i) +str(j))
+                input_map[image_paths_placeholder] = filelist[i]
+                #read the contents of the file and write it
+                file_contents = tf.read_file(image_paths_placeholder)
+                img = tf.image.decode_image(file_contents)
+                img = tf.reshape(img, (1,100,100,3)) #TODO: hard coded dimensions
+                wrong_row = tf.concat((wrong_row,img),axis=2)
+            wrong_pairs = tf.concat((wrong_pairs,wrong_row),axis=1)
+        
+        #concat row to total
+        tf.summary.image(error_type, wrong_pairs, max_outputs=100)
+
+    #run a small network just to save the output    
+    summary_op = tf.summary.merge_all()
+    with tf.Session() as sess:
+        summary = sess.run(summary_op, feed_dict=input_map)
+        writer = tf.summary.FileWriter(logdir)
+        writer.add_summary(summary, 0)
+
 
 
     

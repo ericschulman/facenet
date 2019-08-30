@@ -424,7 +424,7 @@ def distance(embeddings1, embeddings2, distance_metric=0):
         
     return dist
 
-def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_folds=10, distance_metric=0, subtract_mean=False,  labels = None):
+def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_folds=10, distance_metric=0, subtract_mean=False,  labels = None, logdir= None):
     assert(embeddings1.shape[0] == embeddings2.shape[0])
     assert(embeddings1.shape[1] == embeddings2.shape[1])
     nrof_pairs = min(len(actual_issame), embeddings1.shape[0])
@@ -453,60 +453,46 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
             tprs[fold_idx,threshold_idx], fprs[fold_idx,threshold_idx], _ = calculate_accuracy(threshold, dist[test_set], actual_issame[test_set])
 
         #TODO: provide images into accuracy caculation
-        _, _, accuracy[fold_idx] = calculate_accuracy(thresholds[best_threshold_index], dist[test_set], actual_issame[test_set],labels=labels, test_set = test_set)
+        _, _, accuracy[fold_idx] = calculate_accuracy(thresholds[best_threshold_index], dist[test_set], actual_issame[test_set],labels=labels, test_set = test_set, logdir=logdir)
         
         tpr = np.mean(tprs,0)
         fpr = np.mean(fprs,0)
     return tpr, fpr, accuracy
 
 
-def save_examples(labels,test_set,predict_issame,actual_issame, logdir = '../logs/20190814-112400'):
+def save_examples(labels,test_set,predict_issame,actual_issame, logdir = '../logs/test'):
     """save examples of true and false positives to help 
     visualize the learning"""
     labels1 = np.array(labels)[0::2][test_set]
     labels2 = np.array(labels)[1::2][test_set]
   
-    #figure out which are negatives and positives
+    #figure out which are negatives and positivescle
     fp = np.logical_and(predict_issame, np.logical_not(actual_issame))
     fn = np.logical_and(np.logical_not(predict_issame), actual_issame)
-    error_indexes = {'False Negatives':fn, 'False Positives':fp}
-
+    error_indexes = {'false_negatives':fn, 'false_positives':fp}
     #trying to save images to a small tf network
     input_map = {}
 
     #save the false negatives first, the false positives
-    for error_type in ['False Negatives', 'False Positives']:
-        wrong_pairs = np.zeros((1,0,200,3)) #create a null image to concat to
+    for error_type in ['false_negatives', 'false_positives']:
+        #initialize file list for this type of error
         indexes = error_indexes[error_type]
         files1 = labels1[indexes]
         files2 = labels2[indexes]
+        #make an empty array to save results
+        wrong_pairs = []
+        
         #for each pair...
         for i in range(len(files1)):
-            wrong_row = np.zeros((1,100,0,3))
-            #cycle through both types of files
-            for j in range(2) :
-                filelist = [files1,files2][j]
-                image_paths_placeholder = tf.placeholder(tf.string, name='image_paths'+str(i) +str(j))
-                input_map[image_paths_placeholder] = filelist[i]
-                #read the contents of the file and write it
-                file_contents = tf.read_file(image_paths_placeholder)
-                img = tf.image.decode_image(file_contents)
-                img = tf.reshape(img, (1,100,100,3)) #TODO: hard coded dimensions
-                wrong_row = tf.concat((wrong_row,img),axis=2)
-            wrong_pairs = tf.concat((wrong_pairs,wrong_row),axis=1)
-        
-        #concat row to total
-        tf.summary.image(error_type, wrong_pairs, max_outputs=100)
+            wrong_pairs.append([files1[i],files2[i]])
 
-    #run a small network just to save the output    
-    summary_op = tf.summary.merge_all()
-    with tf.Session() as sess:
-        summary = sess.run(summary_op, feed_dict=input_map)
-        writer = tf.summary.FileWriter(logdir)
-        writer.add_summary(summary, 0)
+        #save the result to a csv file in the log folder
+        #print(wrong_pairs)
+        wrong_pairs = np.array(wrong_pairs)
+        np.savetxt( logdir + '/' + error_type + '.csv',  wrong_pairs, delimiter = ',', fmt = '%s')      
 
 
-def calculate_accuracy(threshold, dist, actual_issame, labels=None, test_set=None):
+def calculate_accuracy(threshold, dist, actual_issame, labels=None, test_set=None, logdir=None):
     predict_issame = np.less(dist, threshold)
 
     tp = np.sum(np.logical_and(predict_issame, actual_issame))
@@ -516,7 +502,7 @@ def calculate_accuracy(threshold, dist, actual_issame, labels=None, test_set=Non
     
     #save examples
     if labels is not None and test_set is not None:
-        save_examples(labels,test_set,predict_issame,actual_issame)
+        save_examples(labels,test_set,predict_issame,actual_issame,logdir= logdir)
 
     tpr = 0 if (tp+fn==0) else float(tp) / float(tp+fn)
     fpr = 0 if (fp+tn==0) else float(fp) / float(fp+tn)
