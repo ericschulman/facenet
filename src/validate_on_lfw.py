@@ -40,9 +40,13 @@ from tensorflow.python.ops import data_flow_ops
 from sklearn import metrics
 from scipy.optimize import brentq
 from scipy import interpolate
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from tensorflow.contrib.tensorboard.plugins import projector
+
 
 def main(args):
-  
+    embeddings, image_paths = None, None
     with tf.Graph().as_default():
       
         with tf.Session() as sess:
@@ -78,20 +82,83 @@ def main(args):
             tf.train.start_queue_runners(coord=coord, sess=sess)
 
             #for the first round save the input map, so that we can visualize images of positives
-            evaluate(sess, eval_enqueue_op, image_paths_placeholder, labels_placeholder, phase_train_placeholder, batch_size_placeholder, control_placeholder,
+            embeddings, image_paths = evaluate(sess, eval_enqueue_op, image_paths_placeholder, labels_placeholder, phase_train_placeholder, batch_size_placeholder, control_placeholder,
                 embeddings, label_batch, paths, actual_issame, args.lfw_batch_size, args.lfw_nrof_folds, args.distance_metric, args.subtract_mean,
                 args.use_flipped_images, args.use_fixed_image_standardization, logdir = args.logs)
 
     #save the examples to an event file
-    save_examples( args.logs)
+    save_examples(args.logs)
+    save_embeddings(embeddings, image_paths, args.logs)
 
 
-              
+
+def save_embeddings(embeddings,filenames, logdir):
+    no_images, no_embs = embeddings.shape
+    #open and save images...
+    image_ph = tf.placeholder(tf.float32, [None, 100, 100, 3])
+    #random_images = np.random.uniform(0.0, 1.0, (no_images, 100, 100, 3))
+    thumbnails = []
+    for file in filenames:
+        img = mpimg.imread(file)
+        thumbnails.append(img)
+
+    #random_labels = np.random.randint(0, 1, (no_images, ))
+    thumbnails = np.array(thumbnails)
+    # Embedding variable that stores the embeddings
+    embedding_var = tf.Variable(embeddings)
+    
+    # Create embedding projector, specify embedding inputs to the projector
+    config = projector.ProjectorConfig()
+    embedding = config.embeddings.add()
+    embedding.tensor_name = embedding_var.name
+
+    # Specify sprite images ---> The images corresponding to the embeddings you are computing
+    embedding.sprite.image_path = 'sprite_images.png'
+    embedding.sprite.single_image_dim.extend([100, 100])
+    # Create a summary file writer
+    writer = tf.summary.FileWriter(logdir)
+    # Add the embedding visualizations to this summary
+    projector.visualize_embeddings(writer, config)
+
+    init = tf.global_variables_initializer()
+    with tf.Session() as sess:
+        sess.run(init)
+        sess.run(embedding_var, feed_dict={image_ph: thumbnails})
+        # Save the computed embeddigns
+        saver = tf.train.Saver()
+        saver.save(sess, logdir + "/model.ckpt", 0)
+        
+    write_sprite_image(logdir + '/sprite_images.png', thumbnails[..., 0])
+
+
+def write_sprite_image(filename, images):
+    """ Create a sprite image consisting of sample images
+        :param filename: name of the file to save on disk
+        :param shape: tensor of flattened images  """
+    img_h = images.shape[1]
+    img_w = images.shape[2]
+    # Calculate number of plot
+    n_plots = int(np.ceil(np.sqrt(images.shape[0])))
+    # Make the background of sprite image
+    sprite_image = np.ones((img_h * n_plots, img_w * n_plots))
+
+    for i in range(n_plots):
+        for j in range(n_plots):
+            img_idx = i * n_plots + j
+            if img_idx < images.shape[0]:
+                img = images[img_idx]
+                sprite_image[i * img_h:(i + 1) * img_h,
+                j * img_w:(j + 1) * img_w] = img
+
+    plt.imsave(filename, sprite_image, cmap='gray')
+    print('Sprite image saved in {}'.format(filename))
+         
+
 def evaluate(sess, enqueue_op, image_paths_placeholder, labels_placeholder, phase_train_placeholder, batch_size_placeholder, control_placeholder,
         embeddings, labels, image_paths, actual_issame, batch_size, nrof_folds, distance_metric, subtract_mean, use_flipped_images, use_fixed_image_standardization, logdir=None):
     # Run forward pass to calculate embeddings
     print('Runnning forward pass on LFW images')
-    
+
     # Enqueue one epoch of image paths and labels
     nrof_embeddings = len(actual_issame)*2  # nrof_pairs * nrof_images_per_pair
     nrof_flips = 2 if use_flipped_images else 1
@@ -140,6 +207,7 @@ def evaluate(sess, enqueue_op, image_paths_placeholder, labels_placeholder, phas
     print('Area Under Curve (AUC): %1.3f' % auc)
     eer = brentq(lambda x: 1. - x - interpolate.interp1d(fpr, tpr)(x), 0., 1.)
     print('Equal Error Rate (EER): %1.3f' % eer)
+    return embeddings, image_paths
    
 
 def save_examples(logdir = '../logs/test'):
@@ -179,6 +247,7 @@ def save_examples(logdir = '../logs/test'):
         summary = sess.run(summary_op, feed_dict=input_map)
         writer = tf.summary.FileWriter(logdir)
         writer.add_summary(summary, 0)
+
 
 
 
