@@ -215,7 +215,7 @@ def save_examples(logdir = '../logs/test'):
     visualize the learning"""
     input_map = {}
 
-    for error_type in ['false_negatives', 'false_positives']:
+    for error_type in ['false_negatives', 'false_positives','true_positives', 'true_negatives']:
         #load the names of the files
         files = np.loadtxt(logdir + '/' + error_type + '.csv', dtype=str, delimiter = ',')
         files1 = files[:,0]
@@ -276,7 +276,7 @@ def parse_arguments(argv):
     parser.add_argument('--use_fixed_image_standardization', 
         help='Performs fixed standardization of images.', action='store_true')
     parser.add_argument('--logs', 
-        help='Performs fixed standardization of images.', default=None)
+        help='Log directory for saving visualizations.', default=None)
     return parser.parse_args(argv)
 
 if __name__ == '__main__':

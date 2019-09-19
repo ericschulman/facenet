@@ -469,25 +469,35 @@ def save_examples(labels,test_set,predict_issame,actual_issame, logdir = '../log
     #figure out which are negatives and positivescle
     fp = np.logical_and(predict_issame, np.logical_not(actual_issame))
     fn = np.logical_and(np.logical_not(predict_issame), actual_issame)
-    error_indexes = {'false_negatives':fn, 'false_positives':fp}
+    tp = np.logical_and(predict_issame, actual_issame)
+    tn = np.logical_and(np.logical_not(predict_issame), np.logical_not(actual_issame))
+
+    error_indexes = {'false_negatives':fn, 'false_positives':fp, 'true_positives':tp, 'true_negatives':tn}
     #trying to save images to a small tf network
     input_map = {}
 
     #save the false negatives first, the false positives
-    for error_type in ['false_negatives', 'false_positives']:
+    for error_type in ['false_negatives', 'false_positives','true_positives', 'true_negatives']:
         #initialize file list for this type of error
-        indexes = error_indexes[error_type]
+        indexes = error_indexes[error_type]       
+
+        #get a list of files
         files1 = labels1[indexes]
         files2 = labels2[indexes]
+        max_img = min(len(files1),30)
+
+        #only include visualizations of 30 imags
+        idx = np.random.choice(range(len(files1)),max_img,replace=False)
+        files1 = files1[idx]
+        files2 = files2[idx]
         #make an empty array to save results
         wrong_pairs = []
         
         #for each pair...
-        for i in range(len(files1)):
+        for i in range(max_img):
             wrong_pairs.append([files1[i],files2[i]])
 
         #save the result to a csv file in the log folder
-        #print(wrong_pairs)
         wrong_pairs = np.array(wrong_pairs)
         np.savetxt( logdir + '/' + error_type + '.csv',  wrong_pairs, delimiter = ',', fmt = '%s')      
 
