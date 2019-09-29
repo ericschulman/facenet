@@ -136,11 +136,6 @@ def main(args):
 			other_fonts  = other_fonts.groupby('Style ID').first()
 			other_fonts = len(other_fonts)  #if there are 2 other families
 
-			write_dir = np.random.choice(a=[args.train_dir, args.test_dir], p=[args.percent,1-args.percent])
-			fam_path = os.path.join(write_dir , 'fam' + str(family))
-			if not os.path.exists(fam_path):
-				os.mkdir(fam_path)
-
 			img = Image.open(file)
 			number = ("%03d"%style)[:3]
 			
@@ -156,6 +151,13 @@ def main(args):
 
 			for p_ind in range( len(processed_imgs)):
 			#	try:
+					#decide wether training or test data
+					write_dir = np.random.choice(a=[args.train_dir, args.test_dir], p=[args.percent,1-args.percent])
+					fam_path = os.path.join(write_dir , 'fam' + str(family))
+
+					if not os.path.exists(fam_path):
+						os.mkdir(fam_path)
+
 					img_name = 'fam' + str(family) + '_' + (number + str(p_ind))[:4]
 
 					#resize/crop and save
