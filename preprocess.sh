@@ -1,0 +1,1 @@
+python3 preprocess/setup_data.py --data_dir preprocess/test_data2/ --percent 1 --test_dir preprocess/test_data1/ --train_dir preprocess/test_data1/

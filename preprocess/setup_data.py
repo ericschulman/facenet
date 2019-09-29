@@ -24,7 +24,7 @@ def parse_arguments(argv):
 	return parser.parse_args(argv)
 
 
-def preprocess(img):
+def preprocess1(img):
 	"""for now, break each sentence down further into individual words 
 	using vertical white spaces"""
 	lines = crop_sentences(img)
@@ -44,6 +44,25 @@ def preprocess(img):
 				space = 0
 			else:
 				space = space +1
+
+	return words
+
+
+def preprocess2(img):
+	"""an alternate way to chop down the sentences"""
+	lines = crop_sentences(img)
+	
+	top_breaks = np.array([0,6,11,15,20])/20
+	bot_breaks =  np.array([0,4,8,14])/14
+	all_breaks = [top_breaks,bot_breaks]
+	
+	words = []
+
+	for i in [0,1]:
+		raw_pix = np.array(lines[i])
+		pix_breaks = (all_breaks[i]*raw_pix.shape[1]).astype(int)
+		for b in range(len(pix_breaks)-1):
+			words.append(raw_pix[:, pix_breaks[b]:pix_breaks[b+1] ])
 
 	return words
 
@@ -69,6 +88,7 @@ def crop_sentences(img):
 		preprocess_im.append(crop_img)
 
 	return preprocess_im
+
 
 
 def crop(img,size):
@@ -110,6 +130,12 @@ def main(args):
 		if not family.empty:
 
 			family = family['Family ID'].iloc[0]
+
+			#check to see if there are more than one style per family
+			other_fonts = schema[schema['Family ID'] == family]
+			other_fonts  = other_fonts.groupby('Style ID').first()
+			other_fonts = len(other_fonts)  #if there are 2 other families
+
 			write_dir = np.random.choice(a=[args.train_dir, args.test_dir], p=[args.percent,1-args.percent])
 			fam_path = os.path.join(write_dir , 'fam' + str(family))
 			if not os.path.exists(fam_path):
@@ -118,17 +144,19 @@ def main(args):
 			img = Image.open(file)
 			number = ("%03d"%style)[:3]
 			
-			try: 
-				processed_imgs = preprocess(img)
-				for p_ind in range(len(processed_imgs)):
+			
+			processed_imgs = preprocess2(img)
+
+			if (other_fonts - 2 > 0):
+				#randomly add 3 more if its a family with multiple fonts
+				extra =  min(other_fonts-2,3)
+				additional = np.random.choice(range(len(processed_imgs)), extra, replace=False)
+				for ad in additional:
+					processed_imgs.append(processed_imgs[ad])
+
+			for p_ind in range( len(processed_imgs)):
+			#	try:
 					img_name = 'fam' + str(family) + '_' + (number + str(p_ind))[:4]
-
-					#update sizes.txt
-					#sizes = open(fam_path+'/sizes.txt','a')
-
-					#sizes.write(img_name + ',' + str(processed_imgs[p_ind].size[0]) 
-					#	+ ',' + str(processed_imgs[p_ind].size[1]) + '\n')
-					#sizes.close()
 
 					#resize/crop and save
 					final_img = crop(processed_imgs[p_ind],100)
@@ -136,8 +164,9 @@ def main(args):
 						final_img = final_img.convert('RGB')
 					final_img.save(fam_path + '/' + img_name + '.png','png')
 
-			except:
-				print('fam' + str(family) + '_' + (number + str(p_ind))[:4])
+			
+
+				#except:
 
 
 if __name__ == '__main__':
