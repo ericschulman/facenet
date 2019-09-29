@@ -378,16 +378,15 @@ def evaluate(sess, image_paths, embeddings, labels_batch, image_paths_placeholde
     with open(os.path.join(log_dir,'lfw_result.txt'),'at') as f:
         f.write('%d\t%.5f\t%.5f\n' % (step, np.mean(accuracy), val))
 
-def save_variables_and_metagraph(sess, saver, summary_writer, model_dir, model_name, step, save_freq = 100):
+def save_variables_and_metagraph(sess, saver, summary_writer, model_dir, model_name, step):
     # Save the model checkpoint
     print('Saving variables')
     start_time = time.time()
-    model_dir = model_dir + '-' + str(step//save_freq)
-    checkpoint_path = os.path.join(model_dir, 'model-%s-%s.ckpt' % (model_name, step//save_freq))
+    checkpoint_path = os.path.join(model_dir, 'model-%s.ckpt' % model_name)
     saver.save(sess, checkpoint_path, global_step=step, write_meta_graph=False)
     save_time_variables = time.time() - start_time
     print('Variables saved in %.2f seconds' % save_time_variables)
-    metagraph_filename = os.path.join(model_dir, 'model-%s-%s.meta' % (model_name, step//save_freq))
+    metagraph_filename = os.path.join(model_dir, 'model-%s.meta' % model_name)
     save_time_metagraph = 0  
     if not os.path.exists(metagraph_filename):
         print('Saving metagraph')

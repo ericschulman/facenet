@@ -218,6 +218,9 @@ def save_examples(logdir = '../logs/test'):
     for error_type in ['false_negatives', 'false_positives','true_positives', 'true_negatives']:
         #load the names of the files
         files = np.loadtxt(logdir + '/' + error_type + '.csv', dtype=str, delimiter = ',')
+        if len(files.shape)  < 2:
+            files = np.array([files])
+
         files1 = files[:,0]
         files2 = files[:,1]
 
