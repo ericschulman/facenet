@@ -136,21 +136,22 @@ def main(args):
 			other_fonts  = other_fonts.groupby('Style ID').first()
 			other_fonts = len(other_fonts)  #if there are 2 other families
 
-			img = Image.open(file)
-			number = ("%03d"%style)[:3]
 			
 			
-			processed_imgs = preprocess2(img)
+			try:
+				img = Image.open(file)
+				number = ("%03d"%style)[:3]
+				processed_imgs = preprocess2(img)
 
-			if (other_fonts - 2 > 0):
-				#randomly add 3 more if its a family with multiple fonts
-				extra =  min(other_fonts-2,3)
-				additional = np.random.choice(range(len(processed_imgs)), extra, replace=False)
-				for ad in additional:
-					processed_imgs.append(processed_imgs[ad])
+				if (other_fonts - 2 > 0):
+					#randomly add 3 more if its a family with multiple fonts
+					extra =  min(other_fonts-2,3)
+					additional = np.random.choice(range(len(processed_imgs)), extra, replace=False)
+					for ad in additional:
+						processed_imgs.append(processed_imgs[ad])
 
-			for p_ind in range( len(processed_imgs)):
-			#	try:
+				for p_ind in range( len(processed_imgs)):
+
 					#decide wether training or test data
 					write_dir = np.random.choice(a=[args.train_dir, args.test_dir], p=[args.percent,1-args.percent])
 					fam_path = os.path.join(write_dir , 'fam' + str(family))
@@ -166,9 +167,8 @@ def main(args):
 						final_img = final_img.convert('RGB')
 					final_img.save(fam_path + '/' + img_name + '.png','png')
 
-			
-
-				#except:
+			except:
+				print(file)
 
 
 if __name__ == '__main__':

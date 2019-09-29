@@ -488,6 +488,9 @@ def save_examples(labels,test_set,predict_issame,actual_issame, logdir = '../log
 
         #only include visualizations of 30 imags
         idx = np.random.choice(range(len(files1)),max_img,replace=False)
+        if len(idx) ==0:
+            break 
+
         files1 = files1[idx]
         files2 = files2[idx]
         #make an empty array to save results
