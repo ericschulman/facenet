@@ -16,7 +16,7 @@ class GeneratePairs:
         Parameter img_ext, is the image data extension for all of your image data.
         """
         self.data_dir = args.data_dir
-        self.pairs_filepath = args.saved_dir + 'pairs.txt'
+        self.pairs_filepath = args.saved_dir + args.filename
         self.img_ext = '.png'
         self.repeat_times = int(args.repeat_times)
         self.diff_style = int(args.diff_style)
@@ -153,6 +153,7 @@ def parse_arguments(argv):
     parser.add_argument('--repeat_times', type=str, help='Repeat times to generate pairs', default=3)
     parser.add_argument('--num_classes', type=str, help='number of classes', default=6)
     parser.add_argument('--diff_style', type=str, help='Only include pairs with different styles',default=0)
+    parser.add_argument('--filename', type=str, help='name to call the file',default=0)
     parser.add_argument('--same_word', type=str, help='Only include pairs with same word',default=0)
     return parser.parse_args(argv)
 
