@@ -449,8 +449,14 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
         for threshold_idx, threshold in enumerate(thresholds):
             _, _, acc_train[threshold_idx] = calculate_accuracy(threshold, dist[train_set], actual_issame[train_set])
         best_threshold_index = np.argmax(acc_train)
+
+        if logdir is not None:
+            classif = open(logdir+"/results.csv", "w")
+            classif.write("tp,tn,fp,fn\n")
+            classif.close()
+
         for threshold_idx, threshold in enumerate(thresholds):
-            tprs[fold_idx,threshold_idx], fprs[fold_idx,threshold_idx], _ = calculate_accuracy(threshold, dist[test_set], actual_issame[test_set])
+            tprs[fold_idx,threshold_idx], fprs[fold_idx,threshold_idx], _ = calculate_accuracy(threshold, dist[test_set], actual_issame[test_set],logdir=logdir)
 
         #TODO: provide images into accuracy caculation
         _, _, accuracy[fold_idx] = calculate_accuracy(thresholds[best_threshold_index], dist[test_set], actual_issame[test_set],labels=labels, test_set = test_set, logdir=logdir)
@@ -513,9 +519,16 @@ def calculate_accuracy(threshold, dist, actual_issame, labels=None, test_set=Non
     tn = np.sum(np.logical_and(np.logical_not(predict_issame), np.logical_not(actual_issame)))
     fn = np.sum(np.logical_and(np.logical_not(predict_issame), actual_issame))
     
+    #delete the log directory
+    if logdir is not None and labels is None:
+        classif = open(logdir+"/results.csv", "a")
+        classif.write("%s,%s,%s,%s\n"%(tp,tn,fp,fn))
+
     #save examples
     if labels is not None and test_set is not None:
         save_examples(labels,test_set,predict_issame,actual_issame,logdir= logdir)
+
+
 
     tpr = 0 if (tp+fn==0) else float(tp) / float(tp+fn)
     fpr = 0 if (fp+tn==0) else float(fp) / float(fp+tn)
