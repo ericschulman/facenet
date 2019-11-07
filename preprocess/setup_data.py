@@ -74,7 +74,6 @@ def preprocess3(img):
 	window = 7
 
 	for i in range(10):
-		
 
 		line_no = int(np.random.choice([0,1],1)[0])
 		raw_pix = np.array(lines[line_no])
@@ -82,7 +81,6 @@ def preprocess3(img):
 		start_char = np.random.choice(range(line_end-window))
 		end_char = start_char + window
 		start_index, end_index = int(raw_pix.shape[1]*start_char/line_end),int(raw_pix.shape[1]*end_char/line_end)
-		print(start_index, end_index)
 		words.append(raw_pix[:, start_index:end_index])
 
 	return words
@@ -159,35 +157,35 @@ def main(args):
 			other_fonts = len(other_fonts)  #if there are 2 other families
 
 			
-			
+			try:
+				img = Image.open(file)
+				number = ("%03d"%style)[:3]
+				processed_imgs = preprocess3(img)
 
-			img = Image.open(file)
-			number = ("%03d"%style)[:3]
-			processed_imgs = preprocess3(img)
+				if (other_fonts - 2 <= 0):
+					#drop if its a family with 1 fonts
+					processed_imgs = processed_imgs[:6]
 
-			if (other_fonts - 2 > 0):
-				#randomly add 3 more if its a family with multiple fonts
-				extra =  min(other_fonts-2,3)
-				additional = np.random.choice(range(len(processed_imgs)), extra, replace=False)
-				for ad in additional:
-					processed_imgs.append(processed_imgs[ad])
 
-			for p_ind in range( len(processed_imgs)):
+				for p_ind in range( len(processed_imgs)):
 
-				#decide wether training or test data
-				write_dir = np.random.choice(a=[args.train_dir, args.test_dir], p=[args.percent,1-args.percent])
-				fam_path = os.path.join(write_dir , 'fam' + str(family))
+					#decide wether training or test data
+					write_dir = np.random.choice(a=[args.train_dir, args.test_dir], p=[args.percent,1-args.percent])
+					fam_path = os.path.join(write_dir , 'fam' + str(family))
 
-				if not os.path.exists(fam_path):
-					os.mkdir(fam_path)
+					if not os.path.exists(fam_path):
+						os.mkdir(fam_path)
 
-				img_name = 'fam' + str(family) + '_' + (number + str(p_ind))[:4]
+					img_name = 'fam' + str(family) + '_' + (number + str(p_ind))[:4]
 
-				#resize/crop and save
-				final_img = crop(processed_imgs[p_ind],100)
-				if final_img.mode != 'RGB':
-					final_img = final_img.convert('RGB')
-				final_img.save(fam_path + '/' + img_name + '.png','png')
+					#resize/crop and save
+					final_img = crop(processed_imgs[p_ind],100)
+					if final_img.mode != 'RGB':
+						final_img = final_img.convert('RGB')
+					final_img.save(fam_path + '/' + img_name + '.png','png')
+
+			except Exception as e:
+				print(file, e)
 
 
 
