@@ -67,6 +67,28 @@ def preprocess2(img):
 	return words
 
 
+def preprocess3(img):
+	"""an alternate way to chop down the sentences"""
+	lines = crop_sentences(img)
+	words = []
+	window = 7
+
+	for i in range(10):
+		
+
+		line_no = int(np.random.choice([0,1],1)[0])
+		raw_pix = np.array(lines[line_no])
+		line_end = [20,14][line_no]
+		start_char = np.random.choice(range(line_end-window))
+		end_char = start_char + window
+		start_index, end_index = int(raw_pix.shape[1]*start_char/line_end),int(raw_pix.shape[1]*end_char/line_end)
+		print(start_index, end_index)
+		words.append(raw_pix[:, start_index:end_index])
+
+	return words
+
+
+
 def crop_sentences(img):
 	"""cut down on the size of the images by making smaller sentences size chunks"""
 	raw_pix = np.array(img)
@@ -138,37 +160,35 @@ def main(args):
 
 			
 			
-			try:
-				img = Image.open(file)
-				number = ("%03d"%style)[:3]
-				processed_imgs = preprocess2(img)
 
-				if (other_fonts - 2 > 0):
-					#randomly add 3 more if its a family with multiple fonts
-					extra =  min(other_fonts-2,3)
-					additional = np.random.choice(range(len(processed_imgs)), extra, replace=False)
-					for ad in additional:
-						processed_imgs.append(processed_imgs[ad])
+			img = Image.open(file)
+			number = ("%03d"%style)[:3]
+			processed_imgs = preprocess3(img)
 
-				for p_ind in range( len(processed_imgs)):
+			if (other_fonts - 2 > 0):
+				#randomly add 3 more if its a family with multiple fonts
+				extra =  min(other_fonts-2,3)
+				additional = np.random.choice(range(len(processed_imgs)), extra, replace=False)
+				for ad in additional:
+					processed_imgs.append(processed_imgs[ad])
 
-					#decide wether training or test data
-					write_dir = np.random.choice(a=[args.train_dir, args.test_dir], p=[args.percent,1-args.percent])
-					fam_path = os.path.join(write_dir , 'fam' + str(family))
+			for p_ind in range( len(processed_imgs)):
 
-					if not os.path.exists(fam_path):
-						os.mkdir(fam_path)
+				#decide wether training or test data
+				write_dir = np.random.choice(a=[args.train_dir, args.test_dir], p=[args.percent,1-args.percent])
+				fam_path = os.path.join(write_dir , 'fam' + str(family))
 
-					img_name = 'fam' + str(family) + '_' + (number + str(p_ind))[:4]
+				if not os.path.exists(fam_path):
+					os.mkdir(fam_path)
 
-					#resize/crop and save
-					final_img = crop(processed_imgs[p_ind],100)
-					if final_img.mode != 'RGB':
-						final_img = final_img.convert('RGB')
-					final_img.save(fam_path + '/' + img_name + '.png','png')
+				img_name = 'fam' + str(family) + '_' + (number + str(p_ind))[:4]
 
-			except:
-				print(file)
+				#resize/crop and save
+				final_img = crop(processed_imgs[p_ind],100)
+				if final_img.mode != 'RGB':
+					final_img = final_img.convert('RGB')
+				final_img.save(fam_path + '/' + img_name + '.png','png')
+
 
 
 if __name__ == '__main__':
