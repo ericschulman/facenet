@@ -110,13 +110,13 @@ def get_embeddings(image_paths, model, batch_size):
     return embeddings
 
 
-def main(args):
+def find_images(args):
     schema = pd.read_csv(args.schema_dir)
 
     #set up df with information
     n = 128
-    embeddings = ['embedding %s'%(i+1) for i in range(n)]
-    result_df = pd.DataFrame(columns=['img_name','style','family','crop_name']+embeddings)
+    embedding_names = ['embedding %s'%(i+1) for i in range(n)]
+    result_df = pd.DataFrame(columns=['img_name','style','family','crop_name']+embedding_names)
     
     #set up some variables
     img_files = glob.glob(args.data_dir + '*.bmp')
@@ -144,40 +144,27 @@ def main(args):
                 cropped_images.append(img_names[0])
                 result_df['crop_name'][result_df['img_name'] == fname] = img_names[0]
 
-    #nake an even number for cropping
-    batch_size = 50
-    cropped_images = list(result_df[ 'crop_name' ][result_df['crop_name'].isin(cropped_images)])
-    len_imgs = len(cropped_images)
-    left_over = len_imgs%batch_size
-
-    print("len imgs", len_imgs)
-    print("left over", left_over)
-    print("cropped len", len(cropped_images))
-
-    cropped_images = cropped_images[:-left_over] 
-    embeddings = get_embeddings(cropped_images,args.model,batch_size)
     result_df.to_csv(args.log + '/embeddings.csv',index=False, header=True)
-    print("new cropped len", len(cropped_images))
-    print('<---------------->')
 
-    for i in range(n):
-        print(i)
-        print("cropped imgs", len(cropped_images))
-        print("embeddings", len(embeddings[:,i]))
-        print("fonts", len(result_df[ 'embedding %s'%(i+1) ][result_df['crop_name'].isin(cropped_images)] ) )
-        print("fonts2", len((result_df[ 'crop_name' ][result_df['crop_name'].isin(cropped_images)]).iloc[:-new_left_over]) )
-        print('<------------>')
-        print( (result_df[ 'crop_name'][result_df['crop_name'].isin(cropped_images)]).iloc[-27:] )
-        print('<--------->')
-        print( (result_df[ 'crop_name'][result_df['crop_name'].isin(cropped_images)]).iloc[-37:-27] )
-        print('<--------->')
-        print(cropped_images[-10:])
-        print('<--------->')
-        new_left_over = len(list(result_df[ 'crop_name' ][result_df['crop_name'].isin(cropped_images)]))
-        new_left_over = left_over - len(cropped_images)
-        (result_df[ 'crop_name' ][result_df['crop_name'].isin(cropped_images)]).iloc[:-new_left_over] = embeddings[:,i]
-        #.loc[:len_imgs]
-    result_df.to_csv(args.log + '/embeddings.csv',index=False, header=True)
+
+def write_embeddings(args):
+	result_df = pd.read_csv(args.log + '/embeddings.csv')
+	result_df = result_df[['img_name','style','family','crop_name']]
+	cropped_images = result_df['crop_name'].dropna()
+	cropped_images = list(cropped_images)
+	batch_size = 50
+	end = len(cropped_images)%batch_size
+
+	embeddings = get_embeddings(cropped_images[:-end],args.model,batch_size)
+
+	embeddings_names = ['embedding %s'%(i+1) for i in range(128)]
+	embeddings_df = pd.DataFrame(data=embeddings, columns=embeddings_names)
+	embeddings_df['crop_name'] = cropped_images[:-end]
+
+	result_df = result_df.merge(embeddings_df, on=(['crop_name']), how='left')
+	result_df.to_csv(args.log + '/embeddings.csv',index=False, header=True)
+
 
 if __name__ == '__main__':
-    main(parse_arguments(sys.argv[1:]))
+    #find_images(parse_arguments(sys.argv[1:]))
+    write_embeddings(parse_arguments(sys.argv[1:]))
