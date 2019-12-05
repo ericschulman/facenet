@@ -71,7 +71,7 @@ def preprocess3(img):
 	"""an alternate way to chop down the sentences"""
 	lines = crop_sentences(img)
 	words = []
-	window = 7
+	window = 5
 
 	for i in range(10):
 
