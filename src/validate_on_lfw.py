@@ -87,8 +87,12 @@ def main(args):
                 args.use_flipped_images, args.use_fixed_image_standardization, logdir = args.logs)
 
     #save the examples to an event file
-    save_examples(args.logs)
-    save_embeddings(embeddings, image_paths, args.logs)
+    ####################################################################################################
+    #TODO: uncomment this stuff ########################################################################
+    ####################################################################################################
+
+    #save_examples(args.logs)
+    #save_embeddings(embeddings, image_paths, args.logs)
 
 
 
@@ -210,9 +214,12 @@ def evaluate(sess, enqueue_op, image_paths_placeholder, labels_placeholder, phas
     return embeddings, image_paths
    
 
-def save_examples(logdir = '../logs/test'):
+def save_examples(logdir = None):
     """save examples of true and false positives to help 
     visualize the learning"""
+    if logdir is None:
+        return
+
     input_map = {}
 
     for error_type in ['false_negatives', 'false_positives','true_positives', 'true_negatives']:

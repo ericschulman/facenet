@@ -16,14 +16,17 @@ def parse_arguments(argv):
         default='../datasets/UT research project datasets/Style Sku Family.csv')
     parser.add_argument('--model', type=str, 
         help='Directory with preprocessed data.', 
-        default='../models/20191107-161914')
+        default='../models/20210407-203650')
     parser.add_argument('--log', type=str, 
         help='Directory with preprocessed data.', 
-        default='../logs/20191107-161914-1')
+        default='../logs/20210407-203650')
     parser.add_argument('--data_dir', type=str, 
         help='Directory with data.', 
         #default='../datasets/npg_small/')
         default='../datasets/New Pangram 2/')
+    parser.add_argument('--write_dir', type=str, 
+        help='Directory with data.', 
+        default='../datasets/UT research project datasets/')
     parser.add_argument('--train_dir', type=str, 
         help='Directory with data.', 
         default='../datasets/crop7_train')
@@ -144,11 +147,11 @@ def find_images(args):
                 cropped_images.append(img_names[0])
                 result_df['crop_name'][result_df['img_name'] == fname] = img_names[0]
 
-    result_df.to_csv(args.log + '/embeddings.csv',index=False, header=True)
+    result_df.to_csv(args.write_dir + '/embeddings_full.csv',index=False, header=True)
 
 
 def write_embeddings(args):
-	result_df = pd.read_csv(args.log + '/embeddings.csv')
+	result_df = pd.read_csv(args.write_dir + '/embeddings_full.csv')
 	result_df = result_df[['img_name','style','family','crop_name']]
 	cropped_images = result_df['crop_name'].dropna()
 	cropped_images = list(cropped_images)
@@ -162,9 +165,9 @@ def write_embeddings(args):
 	embeddings_df['crop_name'] = cropped_images[:-end]
 
 	result_df = result_df.merge(embeddings_df, on=(['crop_name']), how='left')
-	result_df.to_csv(args.log + '/embeddings.csv',index=False, header=True)
+	result_df.to_csv(args.write_dir + '/embeddings_full.csv',index=False, header=True)
 
 
 if __name__ == '__main__':
-    #find_images(parse_arguments(sys.argv[1:]))
+    find_images(parse_arguments(sys.argv[1:]))
     write_embeddings(parse_arguments(sys.argv[1:]))

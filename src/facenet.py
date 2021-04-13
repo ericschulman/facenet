@@ -466,9 +466,12 @@ def calculate_roc(thresholds, embeddings1, embeddings2, actual_issame, nrof_fold
     return tpr, fpr, accuracy
 
 
-def save_examples(labels,test_set,predict_issame,actual_issame, logdir = '../logs/test'):
+def save_examples(labels,test_set,predict_issame,actual_issame, logdir =None):
     """save examples of true and false positives to help 
     visualize the learning"""
+    if logdir is None:
+        return
+
     labels1 = np.array(labels)[0::2][test_set]
     labels2 = np.array(labels)[1::2][test_set]
   
