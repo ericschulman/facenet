@@ -119,35 +119,46 @@ def find_images(args):
     #set up df with information
     n = 128
     embedding_names = ['embedding %s'%(i+1) for i in range(n)]
-    result_df = pd.DataFrame(columns=['img_name','style','family','crop_name']+embedding_names)
-    
+
+    #write to file, seems more efficient?
+    resultFile = open(args.write_dir + '/embeddings_full.csv', "w+")
+    resultFile.write('img_name,style,family,crop_name')
+    for embedding_name in embedding_names:
+    	resultFile.write(','+embedding_name)
+    resultFile.write('\n')
+
     #set up some variables
     img_files = glob.glob(args.data_dir + '*.bmp')
-    cropped_images = []
 
+    counter = 1
     for file in img_files:
+
+    	#help output how long it's benn
+        print('%s/%s'%(counter,len(img_files)))
+        counter = counter + 1
+
         #process image name
         fpath, fname = os.path.split(file)
         style = int(fname.split('=')[1].split('.')[0])
 
         #process family folder
         family = schema[schema['Style ID']==style]
-        result_df = result_df.append({'img_name':fname,'style':style}, ignore_index=True)
         if not family.empty:
             family = family['Family ID'].iloc[0]
-            result_df['family'][result_df['img_name'] == fname] = family
-
             number = ("%03d"%style)[:3]   
+
             fam_path = os.path.join(args.train_dir , 'fam' + str(family))
             img_name = 'fam' + str(family) + '_' + (number)
-
             img_name = fam_path + '/' + img_name
             img_names = glob.glob(img_name + '*.png')
-            if len(img_names) > 0:
-                cropped_images.append(img_names[0])
-                result_df['crop_name'][result_df['img_name'] == fname] = img_names[0]
 
-    result_df.to_csv(args.write_dir + '/embeddings_full.csv',index=False, header=True)
+            for img_name in img_names:
+                #get all possible crops...
+                resultFile.write( '%s,%s,%s,%s,\n'%(fname,style,family,img_name))
+
+    resultFile.close()
+
+
 
 
 def write_embeddings(args):
