@@ -121,7 +121,7 @@ def find_images(args):
     embedding_names = ['embedding %s'%(i+1) for i in range(n)]
 
     #write to file, seems more efficient?
-    resultFile = open(args.write_dir + '/embeddings_full.csv', "w+")
+    resultFile = open(args.write_dir + '/embeddings_list.csv', "w+")
     resultFile.write('img_name,style,family,crop_name')
     for embedding_name in embedding_names:
     	resultFile.write(','+embedding_name)
@@ -162,7 +162,7 @@ def find_images(args):
 
 
 def write_embeddings(args):
-	result_df = pd.read_csv(args.write_dir + '/embeddings_full.csv')
+	result_df = pd.read_csv(args.write_dir + '/embeddings_list.csv')
 	result_df = result_df[['img_name','style','family','crop_name']]
 	cropped_images = result_df['crop_name'].dropna()
 	cropped_images = list(cropped_images)
@@ -174,7 +174,7 @@ def write_embeddings(args):
 	embeddings_names = ['embedding %s'%(i+1) for i in range(128)]
 	embeddings_df = pd.DataFrame(data=embeddings, columns=embeddings_names)
 	embeddings_df['crop_name'] = cropped_images[:-end]
-
+	embeddings_df.to_csv(args.write_dir + '/embeddings_nn_result.csv',index=False, header=True) #write to csv for debugging?
 	result_df = result_df.merge(embeddings_df, on=(['crop_name']), how='left')
 	result_df.to_csv(args.write_dir + '/embeddings_full.csv',index=False, header=True)
 
