@@ -7,7 +7,7 @@
 ```
 fonts_project    
 └───datasets
-│   └─── New Pangram 2
+│   └─── raw_pangrams
 │   └─── main_dataset
 │   │   │ Style Sku Family.csv
 └───models
