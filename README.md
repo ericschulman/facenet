@@ -9,8 +9,11 @@ This repository holds the codes to train the neural network and produce the embe
 fonts_project    
 └───datasets
 │   └─── raw_pangrams
+│   └─── crop7_test
+│   └─── crop7_train
 │   └─── main_dataset
 │   │   │ Style Sku Family.csv
+│   │   │ ...
 └───models
 └───logs
 └───fontnet
