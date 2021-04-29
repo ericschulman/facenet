@@ -13,7 +13,7 @@ def parse_arguments(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--schema_dir', type=str, 
         help='Directory with schema.', 
-        default='../datasets/UT research project datasets/Style Sku Family.csv')
+        default='../datasets/main_dataset/Style Sku Family.csv')
     parser.add_argument('--model', type=str, 
         help='Directory with preprocessed data.', 
         default='../models/20210407-203650')
@@ -22,11 +22,10 @@ def parse_arguments(argv):
         default='../logs/20210407-203650')
     parser.add_argument('--data_dir', type=str, 
         help='Directory with data.', 
-        #default='../datasets/npg_small/')
-        default='../datasets/New Pangram 2/')
+        default='../datasets/raw_pangrams/')
     parser.add_argument('--write_dir', type=str, 
         help='Directory with data.', 
-        default='../datasets/UT research project datasets/')
+        default='../datasets/main_dataset/')
     parser.add_argument('--train_dir', type=str, 
         help='Directory with data.', 
         default='../datasets/crop7_train')
