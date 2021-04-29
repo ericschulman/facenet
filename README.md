@@ -1,8 +1,8 @@
-# Font Recognition using Tensorflow and Facenet
+# Creating Embeddings and Recognizing Fonts using Tensorflow
 
 
 ## File structure/files
-* This folder holds the application, and should have external folders with the data.
+* This repository holds the codes to train the neural network and produce the embeddings. The embeddings can be used to recognize fonts. The embeddings will be used in https://github.com/ericschulman/fonts_causal_analysis for causal economic analyses. This repository should have external folders with the data. Here is an example of folder structure under a name ``fonts_project''.
 
 ```
 fonts_project    
