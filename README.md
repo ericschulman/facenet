@@ -1,8 +1,9 @@
 # Creating Embeddings and Recognizing Fonts using TensorFlow
 
+This repository holds the codes to train the neural network and produce the embeddings. The embeddings can be used to recognize fonts. The embeddings will be used in https://github.com/ericschulman/fonts_causal_analysis for causal economic analyses. 
 
 ## File structure/files
-* This repository holds the codes to train the neural network and produce the embeddings. The embeddings can be used to recognize fonts. The embeddings will be used in https://github.com/ericschulman/fonts_causal_analysis for causal economic analyses. This repository should have external folders with the data. Here is an example of folder structure under a name `fonts_project`.
+* This repository should have external folders with the data. Here is an example of folder structure under a name `fonts_project`.
 
 ```
 fonts_project    
