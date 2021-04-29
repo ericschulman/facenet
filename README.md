@@ -20,7 +20,7 @@ fonts_project
 
 ## Preprocessing 
 
-Run `preprocessing.sh` this should create the necessary cropped data. 
+Run `preprocessing.sh`. This should create the necessary cropped data from original pangram bmp images. 
 
 ## Training
 
