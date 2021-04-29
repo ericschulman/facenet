@@ -43,3 +43,7 @@ Run `write_embeddings.sh`.  You will need to specify the model and log directori
 * [Han, S., Schulman, E., Grauman, K., & Ramakrishnan, S. (2020). Shapes as product differentiation: Neural network embedding in the analysis of markets for fonts.](https://sites.google.com/site/universs01/mypdf/font_embedding.pdf)
 
 * [Schroff, F., Kalenichenko, D., & Philbin, J. (2015). Facenet: A unified embedding for face recognition and clustering. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 815-823).](https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Schroff_FaceNet_A_Unified_2015_CVPR_paper.pdf)
+
+## License
+
+The codes and the dataset (separated shared) for this repository are protected by the Creative Commons non-commerical no-derivative license.
