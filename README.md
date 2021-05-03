@@ -1,6 +1,6 @@
-# Neural Network Training and Embedding Construction
+# Neural Network Training and Embedding Construction for Typeface Images
 
-This repository holds the codes to train the neural network and produce the embeddings. The embeddings can be used to recognize fonts. The embeddings will be used in https://github.com/ericschulman/fonts_causal_analysis for causal economic analyses. Refer to Han et al. (2020) for details of the neural network training and embedding construction.
+This repository holds the codes to train the neural network and produce the embeddings for fonts. The embeddings can be used to recognize fonts. The embeddings will be used in https://github.com/ericschulman/fonts_causal_analysis for causal economic analyses. See Han et al. (2020) for details.
 
 ## File structure/files
 * This repository should have external folders with the data. Here is an example of folder structure under a name `fonts_project`.
